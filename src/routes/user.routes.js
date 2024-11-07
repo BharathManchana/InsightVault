@@ -1,9 +1,24 @@
 import { Router } from "express";
 import{registerUser} from "../controllers/user.controller.js";
+import {upload} from "../middlewares/multer.middleware.js"
+
 
 const router = Router()
 
-router.route("/register").post(registerUser)
+router.route("/register").post(
+    upload.fields([     //injecting a middle ware before we call a function so that the user uploads file using multer
+                        //We used feilds cause we want to upload many files but we cant use array directly cause array takes at a time so we used fileds
+        {
+            name:"avatar",
+            maxCount:1 //no of files u accept to upload
+        },
+        {
+            name:"coverImage",
+            maxCount:1
+        }
+    ]),
+    registerUser
+)
 
 export default router;
 //export default router;

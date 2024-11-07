@@ -8,9 +8,11 @@ class ApiError extends Error {
         stack = ""
     ){
         super(message)
+       // console.log("Hi1",message)
         this.statusCode = statusCode
         this.data = null
         this.message = message
+        //console.log("Hi2",message)
         this.success = false;
         this.errors = errors
 

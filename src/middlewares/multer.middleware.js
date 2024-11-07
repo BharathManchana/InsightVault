@@ -1,5 +1,7 @@
+//A middle ware is something like before u go to a function once come to me and then go
+
 import multer from "multer";
-import multer from "multer";
+
 
 
 
