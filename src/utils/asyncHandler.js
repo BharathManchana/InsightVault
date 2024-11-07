@@ -1,5 +1,8 @@
+// The asyncHandler is used to wrap this function so that any asynchronous errors are
+// handled correctly without you needing to manually write try-catch inside each route.
+
 const asyncHandler = (requestHandler)=>{
-    (req,res,next) =>{
+   return (req,res,next) =>{
         Promise.resolve(requestHandler(req,res,next))
         .catch((err)=>next(err))
     }

@@ -42,7 +42,7 @@ const videoSchema = new Schema(
     }
 )
 
-videoSchema.plugin(mongooseAggregatePaginate)
+videoSchema.plugin(mongooseAggregatePaginate)    //Check this again
 
 export const Video = mongoose.model("Video", videoSchema) 
 // Exporting the model (export const Video = mongoose.model(...)) is typically what you'd want to do because it gives you the complete functionality of the model (querying, saving, updating, etc.) right away.
