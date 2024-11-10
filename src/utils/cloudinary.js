@@ -27,6 +27,7 @@ import fs from 'fs';
 
             //After file upload success
             console.log("File is uploaded on cloudinary ",response.url) ;
+            fs.unlinkSync(localFilePath)
             return response;
         } catch (error) {
             fs.unlinkSync(localFilePath);  //unlinkSync is a delete operation that removes the file from the filesystem.
