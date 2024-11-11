@@ -4,6 +4,23 @@ import {User} from "../models/user.model.js";
 import {uploadOnCloudinary} from "../utils/cloudinary.js";
 import {ApiResponse} from "../utils/ApiResponse.js"
 
+
+const generateAccesAndRefreshTokens = async (userId) =>{
+  try {
+    const user = await User.findById(userId);
+    const AccesToken = user.generateAccessToken();
+    const RefreshToken = user.generateRefreshToken();
+
+    user.refreshToken = RefreshToken;
+    await user.save({ validateBeforeSave: false })  //this line is saying the database that i have checked everything u just save it
+
+    return {AccesToken, RefreshToken}
+
+  } catch (error) {
+    throw new ApiError(500,"Something went wrong while generating the Acces and Refresh Tokens")
+  }
+}
+
 const registerUser = asyncHandler(async (req,res)=>{
    //take details
    //validation
@@ -68,6 +85,86 @@ return res.status(201).json(
 
 })
 
-export {registerUser}
+const loginUser = asyncHandler(async (req,res) => {
+  //req.body
+  //check if the details are presnt in req.body
+  //check user exists
+  //password
+  //tokens
+  //send tokens in cokkies 
+  //send a login success msg
+
+  const {username,email,password} = req.body;
+
+  if(!username,email){
+    throw new ApiError(400,"Please enter your username or email");
+  }
+  const user = await User.findOne({
+    $or:[{username},{email}]
+  })
+  if(!user){
+    throw new ApiError(404,"Uesr doesnt exist")
+  }
+  
+  const isPasswordValid = await user.isPasswordCorrect(password);
+
+  if(!isPasswordValid) throw new ApiError(401,"Invalid password");
+
+  const{AccesToken,RefreshToken}= await generateAccesAndRefreshTokens(user._id);
+
+  const loggedInUser = await User.findById(user._id).select("-password -refreshToken");
+  
+  const options = {
+    httpOnly : true,     //We write this options becasues in default the browser has access to modify the cookies in fornt end but when we wrtie this lines
+    secure: true         //we are saying that the cookies are to be modified only the server.
+  }
+
+  return res
+  .status(200)
+  .cookie("AccesToken",AccesToken,options)
+  .cookie("RefreshToken",RefreshToken,options)
+  .json(
+    new ApiResponse(
+      200,
+      {
+        user: loggedInUser,AccesToken,RefreshToken   //Sending again for giving the user the func of saving the tokens by himself
+      },
+      "User logged In successfully"
+    )
+  )
+})
+
+const logOutUser = asyncHandler(async(req,res)=>{
+  await User.findByIdAndUpdate(              //we have injected a middle ware in routes before the func call so that we get the user details in req and use req. to get the id of the user to access the DB and find out the token and modify it
+    req.User._id,
+    {
+      $set : {
+        refreshToken:undefined
+      }
+    },
+    {
+      new:true //To get the new updated value refreshtoken with undefined
+    }
+  )
+  const options = {
+    httpOnly : true,     //We write this options becasues in default the browser has access to modify the cookies in fornt end but when we wrtie this lines
+    secure: true         //we are saying that the cookies are to be modified only the server.
+  }
+  return res
+  .status(200)
+  .clearCookie("AccesToken",options)
+  .clearCookie("RefreshToken", options)
+  .json(new ApiResponse(200, {}, "User logged Out"))
+  
+})
+
+
+
+export {
+  registerUser,
+  loginUser,
+  logOutUser
+
+}
 
 
