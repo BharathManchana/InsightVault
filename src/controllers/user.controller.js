@@ -137,7 +137,7 @@ const loginUser = asyncHandler(async (req,res) => {
 
 const logOutUser = asyncHandler(async(req,res)=>{
   await User.findByIdAndUpdate(              //we have injected a middle ware in routes before the func call so that we get the user details in req and use req. to get the id of the user to access the DB and find out the token and modify it
-    req.User._id,
+    req.user._id,
     {
       $set : {
         refreshToken:undefined
