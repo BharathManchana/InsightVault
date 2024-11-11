@@ -95,8 +95,9 @@ const loginUser = asyncHandler(async (req,res) => {
   //send a login success msg
 
   const {username,email,password} = req.body;
+  console.log(email);
 
-  if(!username,email){
+  if(!(username || email)){
     throw new ApiError(400,"Please enter your username or email");
   }
   const user = await User.findOne({
