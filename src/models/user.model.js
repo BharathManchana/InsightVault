@@ -1,5 +1,5 @@
 import mongoose, {Schema} from "mongoose";
-import jwt from "jsonwebtoken"   //jwt is a bearer token i.e who evet has this token it gives data to it basically its like a key
+import jwt from "jsonwebtoken"   //jwt is a bearer token i.e who ever has this token it gives data to it basically its like a key
 import bcrypt from "bcrypt"
 
 const userSchema = new Schema(
