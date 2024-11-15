@@ -141,8 +141,8 @@ const logOutUser = asyncHandler(async(req,res)=>{
   await User.findByIdAndUpdate(              //we have injected a middle ware in routes before the func call so that we get the user details in req and use req. to get the id of the user to access the DB and find out the token and modify it
     req.user._id,
     {
-      $set : {
-        refreshToken:undefined
+      $unset : {
+        refreshToken:1 //removes the filed from the document
       }
     },
     {
@@ -311,9 +311,118 @@ const updateUserCoverImage = asyncHandler(async(req,res)=>{
   .json(new ApiResponse(200,user,"Cover image updated successfully"))
 })
 
+const getUserChannelProfile = asyncHandler(async(req, res) => {
+  const {username} = req.params
 
+  if (!username?.trim()) {
+      throw new ApiError(400, "username is missing")
+  }
 
+  const channel = await User.aggregate([
+      {
+          $match: {
+              username: username?.toLowerCase()
+          }
+      },
+      {
+          $lookup: {
+              from: "subscriptions",
+              localField: "_id",
+              foreignField: "channel",
+              as: "subscribers"
+          }
+      },
+      {
+          $lookup: {
+              from: "subscriptions",
+              localField: "_id",
+              foreignField: "subscriber",
+              as: "subscribedTo"
+          }
+      },
+      {
+          $addFields: {
+              subscribersCount: {
+                  $size: "$subscribers"
+              },
+              channelsSubscribedToCount: {
+                  $size: "$subscribedTo"
+              },
+              isSubscribed: {
+                  $cond: {
+                      if: {$in: [req.user?._id, "$subscribers.subscriber"]},
+                      then: true,
+                      else: false
+                  }
+              }
+          }
+      },
+      {
+          $project: {
+              fullName: 1,
+              username: 1,
+              subscribersCount: 1,
+              channelsSubscribedToCount: 1,
+              isSubscribed: 1,
+              avatar: 1,
+              coverImage: 1,
+              email: 1
 
+          }
+      }
+  ])
+
+  if (!channel?.length) {
+      throw new ApiError(404, "channel does not exists")
+  }
+
+  return res
+  .status(200)
+  .json(
+      new ApiResponse(200, channel[0], "User channel fetched successfully")
+  )
+})
+
+const getWatchHistory = asyncHandler(async(req,res)=>{
+  //req.user._id this wont give the the id driectly previously we used monngose so it handled it well but this time when using aggregation pipe line
+  //will pass code directly through pipe lines and not the Mongoose 
+  const user = await User.aggregate([
+    {
+      $match:{
+        _id: new mongoose.Types.ObjectId(req.user._id) //Here we shouldnt write req.user._id directly cause pipe lines wont go through mongoose
+      }
+    },
+    {
+      $lookup:{
+        from:"videos",
+        localField:"watchHistory",
+        foreignField:"_id",
+        as:"watchHistory",
+        pipeline:[      //Here we used pipeline cause we are trying to use a nested pipe line so inside lookup we are writing a pipeline word so
+          //that we can use
+          {
+            $lookup:{
+             from:"users",
+             localField:"owner",
+             foreignField:"_id",
+             as:"Owner",
+             pipeline:[ //we are using an other pipe line here cause we dont want to send all the details of the owner in the history
+              {
+                $project:{
+                  fullName:1,
+                  userName:1,
+                  avatar:1
+                }
+              }
+             ]
+            }
+          }
+        ]
+      }
+
+    }
+  ])
+})
 
 
 export {
@@ -325,7 +434,9 @@ export {
   getCurrentUser,
   updateAccountDetails,
   updateAvatar,
-  updateUserCoverImage
+  updateUserCoverImage,
+  getUserChannelProfile,
+  getWatchHistory
 
 }
 
