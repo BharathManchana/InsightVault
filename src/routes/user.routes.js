@@ -4,6 +4,7 @@ import{registerUser,loginUser,logOutUser,refreshAccessToken,changeCurrentPassWor
     updateAccountDetails,
     updateAvatar,
     updateUserCoverImage,
+    getWatchHistory
  } from "../controllers/user.controller.js";
 import {upload} from "../middlewares/multer.middleware.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
@@ -32,10 +33,10 @@ router.route("/login").post(loginUser)
 router.route("/logout").post(verifyJWT,  logOutUser)
 router.route("/refresh-token").post(refreshAccessToken)
 router.route("/current-user").get(verifyJWT, getCurrentUser)
-router.route("/update-account").patch(verifyJWT, updateAccountDetails)
+router.route("/update-account").patch(verifyJWT, updateAccountDetails) //We used patch because we need to update only one single thing which we change in that route
 router.route("/avatar").patch(verifyJWT, upload.single("avatar"), updateAvatar)
 router.route("/cover-image").patch(verifyJWT, upload.single("coverImage"), updateUserCoverImage)
-
+router.route("/history").get(verifyJWT, getWatchHistory)
 export default router;
 //export default router;
 // This is a default export. It exports router as the "default" export from the file. When importing, the name doesn't matter, 
