@@ -4,6 +4,8 @@ import {User} from "../models/user.model.js";
 import {uploadOnCloudinary} from "../utils/cloudinary.js";
 import {ApiResponse} from "../utils/ApiResponse.js"
 import { verifyJWT } from "../middlewares/auth.middleware.js";
+import mongoose, { Schema } from "mongoose";
+
 
 //AccesToken user -30 min shortLived
 //RefreshToken stored in DB
@@ -54,8 +56,8 @@ const registerUser = asyncHandler(async (req,res)=>{
   })
   if (existedUser) throw new ApiError(409, "User with email or username already exists");
   
-  const avatarLocalPath = req.files?.avatar[0]?.path;
-  const coverImageLocalPath = req.files?.coverImage[0]?.path;
+  const avatarLocalPath = req.files?.avatar?.[0]?.path;
+  const coverImageLocalPath = req.files?.coverImage?.[0]?.path;
   if(!avatarLocalPath) throw new ApiError(400,"Avatar file is required");
 
   const avatar = await uploadOnCloudinary(avatarLocalPath);
@@ -142,7 +144,7 @@ const logOutUser = asyncHandler(async(req,res)=>{
     req.user._id,
     {
       $unset : {
-        refreshToken:1 //removes the filed from the document
+        refreshToken:1 //removes the field from the document
       }
     },
     {
@@ -216,8 +218,6 @@ const changeCurrentPassWord = asyncHandler(async(req,res)=>{
   return res
   .status(200)
   .json(new ApiResponse(200,{},"Password changed successfully"))
-
-
 })
 
 const getCurrentUser = asyncHandler(async(req, res) => {

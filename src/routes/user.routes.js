@@ -4,6 +4,7 @@ import{registerUser,loginUser,logOutUser,refreshAccessToken,changeCurrentPassWor
     updateAccountDetails,
     updateAvatar,
     updateUserCoverImage,
+    getUserChannelProfile,
     getWatchHistory
  } from "../controllers/user.controller.js";
 import {upload} from "../middlewares/multer.middleware.js";
@@ -32,10 +33,12 @@ router.route("/login").post(loginUser)
 //secured routes
 router.route("/logout").post(verifyJWT,  logOutUser)
 router.route("/refresh-token").post(refreshAccessToken)
+router.route("/change-password").post(verifyJWT, changeCurrentPassWord)
 router.route("/current-user").get(verifyJWT, getCurrentUser)
 router.route("/update-account").patch(verifyJWT, updateAccountDetails) //We used patch because we need to update only one single thing which we change in that route
 router.route("/avatar").patch(verifyJWT, upload.single("avatar"), updateAvatar)
 router.route("/cover-image").patch(verifyJWT, upload.single("coverImage"), updateUserCoverImage)
+router.route("/c/:username").get(verifyJWT, getUserChannelProfile)
 router.route("/history").get(verifyJWT, getWatchHistory)
 export default router;
 //export default router;
