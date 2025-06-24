@@ -122,24 +122,39 @@ const loginUser = asyncHandler(async (req,res) => {
   
   const options = {
     httpOnly : true,     //We write this options becasues in default the browser has access to modify the cookies in fornt end but when we wrtie this lines
-    secure: true         //we are saying that the cookies are to be modified only the server.
+    // secure: true         //we are saying that the cookies are to be modified only the server.
   }
 
 
 
+  // return res
+  // .status(200)
+  // .cookie("AccessToken",AccessToken,options)
+  // .cookie("RefreshToken",RefreshToken,options)
+  // .json(
+  //   new ApiResponse(
+  //     200,
+  //     {
+  //       user: loggedInUser,AccesToken,RefreshToken   //Sending again for giving the user the func of saving the tokens by himself
+  //     },
+  //     "User logged In successfully"
+  //   )
+  // )
   return res
   .status(200)
-  .cookie("AccessToken",AccessToken,options)
-  .cookie("RefreshToken",RefreshToken,options)
+  .cookie("AccessToken", AccessToken, options)
+  .cookie("RefreshToken", RefreshToken, options)
   .json(
     new ApiResponse(
       200,
       {
-        user: loggedInUser,AccesToken,RefreshToken   //Sending again for giving the user the func of saving the tokens by himself
+        user: loggedInUser,
+        AccessToken,      // <--- fix here!
+        RefreshToken
       },
       "User logged In successfully"
     )
-  )
+  );
 })
 
 const logOutUser = asyncHandler(async(req,res)=>{
