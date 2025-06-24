@@ -115,7 +115,8 @@ const loginUser = asyncHandler(async (req,res) => {
 
   if(!isPasswordValid) throw new ApiError(401,"Invalid password");
 
-  const{AccesToken,RefreshToken}= await generateAccesAndRefreshTokens(user._id);
+  // const{AccesToken,RefreshToken}= await generateAccesAndRefreshTokens(user._id);
+  const{AccessToken, RefreshToken}= await generateAccesAndRefreshTokens(user._id);
 
   const loggedInUser = await User.findById(user._id).select("-password -refreshToken");
   
@@ -124,9 +125,11 @@ const loginUser = asyncHandler(async (req,res) => {
     secure: true         //we are saying that the cookies are to be modified only the server.
   }
 
+
+
   return res
   .status(200)
-  .cookie("AccesToken",AccesToken,options)
+  .cookie("AccessToken",AccessToken,options)
   .cookie("RefreshToken",RefreshToken,options)
   .json(
     new ApiResponse(
@@ -157,8 +160,8 @@ const logOutUser = asyncHandler(async(req,res)=>{
   }
   return res
   .status(200)
-  .clearCookie("AccesToken",options)
-  .clearCookie("RefreshToken", options)
+  .clearcookie("AccessToken",AccessToken,options)
+  .clearcookie("RefreshToken",RefreshToken,options)
   .json(new ApiResponse(200, {}, "User logged Out"))
   
 })
@@ -186,8 +189,8 @@ const refreshAccessToken = asyncHandler(async(req,res)=>{
   
   return res
   .status(200)
-  .cookie("AccessToken", AccessToken, options)
-  .cookie("RefreshToken", newRefreshToken, options)
+  .cookie("AccessToken",AccessToken,options)
+  .cookie("RefreshToken",RefreshToken,options)
   .json(
       new ApiResponse(
           200, 
