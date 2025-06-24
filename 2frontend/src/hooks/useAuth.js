@@ -7,7 +7,7 @@ export default function useAuth() {
 
   async function refreshUser() {
     try {
-      const res = await api.get("/user/current-user");
+      const res = await api.get("/users/current-user");
       setUser(res.data.data);
     } catch {
       setUser(null);
@@ -22,12 +22,12 @@ export default function useAuth() {
 
   // Use username and password
   async function login(username, password) {
-    await api.post("/user/login", { username, password });
+    await api.post("/users/login", { username, password });
     await refreshUser();
   }
 
   async function logout() {
-    await api.post("/user/logout");
+    await api.post("/users/logout");
     setUser(null);
   }
 
