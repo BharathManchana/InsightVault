@@ -2,6 +2,7 @@ import exprees from "express"
 import cors from "cors"
 import cookieParser from "cookie-parser"
 
+
 const app = exprees()
 
 app.use(cors(
@@ -21,6 +22,7 @@ app.use(cookieParser())
 
 
 //routes import
+import contentRouter from './routes/content.routes.js';
 import userRouter from './routes/user.routes.js'
 // import healthcheckRouter from "./routes/healthcheck.routes.js"
 // import tweetRouter from "./routes/tweet.routes.js"
@@ -33,6 +35,7 @@ import userRouter from './routes/user.routes.js'
 
 //routes declaration
 // app.use("/api/v1/healthcheck", healthcheckRouter)
+   app.use("/api/v1/content", contentRouter);
    app.use("/api/v1/users", userRouter)             //we are using use instead of get because we are using routers in other file 
 // app.use("/api/v1/tweets", tweetRouter)
 // app.use("/api/v1/subscriptions", subscriptionRouter)
