@@ -12,16 +12,15 @@ import mongoose, { Schema } from "mongoose";
 const generateAccesAndRefreshTokens = async (userId) =>{
   try {
     const user = await User.findById(userId);
-    const AccesToken = user.generateAccessToken();
+    const AccessToken = user.generateAccessToken();
     const RefreshToken = user.generateRefreshToken();
 
     user.refreshToken = RefreshToken;
-    await user.save({ validateBeforeSave: false })  //this line is saying the database that i have checked everything u just save it
+    await user.save({ validateBeforeSave: false });
 
-    return {AccesToken, RefreshToken}
-
+    return { AccessToken, RefreshToken };
   } catch (error) {
-    throw new ApiError(500,"Something went wrong while generating the Acces and Refresh Tokens")
+    throw new ApiError(500,"Something went wrong while generating the Access and Refresh Tokens")
   }
 }
 
@@ -89,73 +88,46 @@ return res.status(201).json(
 
 })
 
-const loginUser = asyncHandler(async (req,res) => {
-  //req.body
-  //check if the details are presnt in req.body
-  //check user exists
-  //password
-  //tokens
-  //send tokens in cokkies 
-  //send a login success msg
+const loginUser = asyncHandler(async (req, res) => {
+  const { username, email, password } = req.body;
 
-  const {username,email,password} = req.body;
-  console.log(email);
-
-  if(!(username || email)){
-    throw new ApiError(400,"Please enter your username or email");
+  if (!(username || email)) {
+    throw new ApiError(400, "Please enter your username or email");
   }
+
   const user = await User.findOne({
-    $or:[{username},{email}]
-  })
-  if(!user){
-    throw new ApiError(404,"Uesr doesnt exist")
+    $or: [{ username }, { email }]
+  });
+  if (!user) {
+    throw new ApiError(404, "User doesn't exist");
   }
-  
+
   const isPasswordValid = await user.isPasswordCorrect(password);
+  if (!isPasswordValid) throw new ApiError(401, "Invalid password");
 
-  if(!isPasswordValid) throw new ApiError(401,"Invalid password");
-
-  // const{AccesToken,RefreshToken}= await generateAccesAndRefreshTokens(user._id);
-  const{AccessToken, RefreshToken}= await generateAccesAndRefreshTokens(user._id);
+  const { AccessToken, RefreshToken } = await generateAccesAndRefreshTokens(user._id);
 
   const loggedInUser = await User.findById(user._id).select("-password -refreshToken");
-  
+
   const options = {
-    httpOnly : true,     //We write this options becasues in default the browser has access to modify the cookies in fornt end but when we wrtie this lines
-    // secure: true         //we are saying that the cookies are to be modified only the server.
-  }
+    httpOnly: true,
+    sameSite: "lax", // Change to "none" and add secure: true if using HTTPS
+    // secure: true,
+    // domain: ".yourdomain.com", // Set only if using a custom domain
+    // path: "/"
+  };
 
+  res
+    .status(200)
+    .cookie("AccessToken", AccessToken, {...options, maxAge: 1000*60*30 }) // 30 min
+    .cookie("RefreshToken", RefreshToken, {...options, maxAge: 1000*60*60*24*7 }) // 7 days
+    .json(new ApiResponse(
+        200,
+        { user: loggedInUser, AccessToken, RefreshToken },
+        "User logged in successfully"
+    ));
+});
 
-
-  // return res
-  // .status(200)
-  // .cookie("AccessToken",AccessToken,options)
-  // .cookie("RefreshToken",RefreshToken,options)
-  // .json(
-  //   new ApiResponse(
-  //     200,
-  //     {
-  //       user: loggedInUser,AccesToken,RefreshToken   //Sending again for giving the user the func of saving the tokens by himself
-  //     },
-  //     "User logged In successfully"
-  //   )
-  // )
-  return res
-  .status(200)
-  .cookie("AccessToken", AccessToken, options)
-  .cookie("RefreshToken", RefreshToken, options)
-  .json(
-    new ApiResponse(
-      200,
-      {
-        user: loggedInUser,
-        AccessToken,      // <--- fix here!
-        RefreshToken
-      },
-      "User logged In successfully"
-    )
-  );
-})
 
 const logOutUser = asyncHandler(async(req,res)=>{
   await User.findByIdAndUpdate(              //we have injected a middle ware in routes before the func call so that we get the user details in req and use req. to get the id of the user to access the DB and find out the token and modify it
